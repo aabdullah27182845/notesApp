@@ -4,14 +4,16 @@ import com.abdullah.notesApp.entity.User;
 import com.abdullah.notesApp.repository.UsersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Optional;
+import java.util.List;
 
 @Component
 public class NotesAppAuthenticationProvider implements AuthenticationProvider {
@@ -27,9 +29,17 @@ public class NotesAppAuthenticationProvider implements AuthenticationProvider {
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String username = authentication.getName();
         String pwd = authentication.getCredentials().toString();
-        User user = repository.findByUsername(username);
+        List<User> users = repository.findByUsername(username);
 
-        return new UsernamePasswordAuthenticationToken(username, pwd, new ArrayList<>());
+        if (users.size() > 0) {
+            User user = users.get(0);
+            if (user.getPassword().equals(authentication.getCredentials())) {
+                return new UsernamePasswordAuthenticationToken(username, pwd, new ArrayList<>());
+            } else {
+                System.out.println("ended here");
+            }
+        }
+        throw new UsernameNotFoundException("User not found");
     }
 
     @Override
